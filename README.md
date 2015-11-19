@@ -53,6 +53,7 @@ Sometimes I find myself needing to make a custom wrapper for a REST API while wr
 * All requests made with this library are appropriately closed. I noticed most code examples of the Apache Http Client library found accross the Internet don't actually close connections/io properly. This might explain alot of things about other Java code that interacts with Web APIs. :) If you look at the code in this repo, you will see that there is an attempt to (try to) eloquently close resources whenever necassary. For example:
 
 
+
     try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
       validateResponse(response, url);
       logger.debug(String.format("GET %s: %s", url, response.getStatusLine()));
@@ -60,12 +61,14 @@ Sometimes I find myself needing to make a custom wrapper for a REST API while wr
     } catch (IOException e) { // connection is closed via try-with-resources
       logger.error(e);
     }
+    
          
 * This library wraps Apache Http Client 4.3.
 * All requests are logged via Log4j to make debugging easier. For example:
 
 
-	// [Request Type] [Resource Requested]: [Response Status Line]
+
+    // [Request Type] [Resource Requested]: [Response Status Line]
     2015-11-19 00:29:55,770 DEBUG [main] http.SimpleHttpClient (SimpleHttpClient.java:202) - GET http://127.0.0.1:1080/: HTTP/1.1 200 OK
  
 
