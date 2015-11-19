@@ -46,7 +46,7 @@ A simple wrapper of Apache's Http Client Library that tries to make interacting 
 
 ## Why?
 
-Sometimes I find myself needing to make a custom wrapper for a REST API in while writing Java. 
+Sometimes I find myself needing to make a custom wrapper for a REST API while writing Java. 
 
 ## Notes
 
