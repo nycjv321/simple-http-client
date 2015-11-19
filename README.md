@@ -28,7 +28,7 @@ A simple wrapper of Apache's Http Client Library that tries to make interacting 
     // Post a resource with custom headers
     client.post("http://localhost:3000/resource", "/tmp/resource.json", new BasicHeader("key", "value")) 
 
-	// POST to a resource with no body and multiple headeres
+	// POST to a resource with no body and multiple headers
     client.post(
         "http://localhost:3000/resource", 
         new BasicHeader("key", "value"),
