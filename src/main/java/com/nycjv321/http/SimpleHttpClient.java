@@ -198,8 +198,8 @@ public class SimpleHttpClient {
         return httpClientSupplier.get();
     }
 
-    public String get(URL url) {
-        return get(url.toString());
+    public String get(URL url,  Header... headers) {
+        return get(url.toString(), headers);
     }
 
     /**
@@ -209,9 +209,12 @@ public class SimpleHttpClient {
      * @param url a url to get from
      * @return a string representation of the contents of the HTTP Response
      */
-    public String get(String url) {
+    public String get(String url, Header... headers) {
         CloseableHttpClient httpClient = createHttpClient();
         HttpRequestBase httpGet = create(METHOD.GET, url);
+
+        httpGet.setHeaders(headers);
+
         // Perform a HTTP GET
         try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
             validateResponse(response, url);
