@@ -1,18 +1,29 @@
 package com.nycjv321.http;
 
 import com.google.common.collect.ImmutableMap;
-import com.nycjv321.http.exceptions.HttpException;
+import com.nycjv321.http.builder.MessageBodyClientBuilder;
+import com.nycjv321.http.client.MessageBodyClient;
 import com.nycjv321.utilities.XMLUtilities;
 import org.jdom2.Document;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.fail;
 
-public class SimpleHttpClientTest extends AbstractSimpleHttpClientTest {
+public class MessageClientTest extends ClientTest {
+
+    private MessageBodyClient messageBodyClient;
+
+    @BeforeMethod(alwaysRun = true)
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
+        messageBodyClient = MessageBodyClientBuilder.create().build();
+    }
 
     @Test
     public void get() throws Exception {
@@ -23,7 +34,7 @@ public class SimpleHttpClientTest extends AbstractSimpleHttpClientTest {
                 ).respond(
                         HttpResponse.response().withBody(body).withStatusCode(200)
                 ),
-                t -> assertEquals(getSimpleHttpClient().get("http://127.0.0.1:1080/"), body));
+                t -> assertEquals(getMessageBodyClient().get("http://127.0.0.1:1080/"), body));
     }
 
 
@@ -36,7 +47,7 @@ public class SimpleHttpClientTest extends AbstractSimpleHttpClientTest {
                 ).respond(
                         HttpResponse.response().withBody(XMLUtilities.toString(body)).withStatusCode(200)
                 ),
-                t -> assertEquals(XMLUtilities.toString(getSimpleHttpClient().getDocument("http://127.0.0.1:1080/")), XMLUtilities.toString(body)));
+                t -> assertEquals(XMLUtilities.toString(getMessageBodyClient().getDocument("http://127.0.0.1:1080/")), XMLUtilities.toString(body)));
     }
 
     @Test(dependsOnMethods = "getDocument")
@@ -51,48 +62,15 @@ public class SimpleHttpClientTest extends AbstractSimpleHttpClientTest {
                 t -> {
                     JSONObject json = null;
                     try {
-                        json = getSimpleHttpClient().getJSON("http://127.0.0.1:1080/");
+                        json = getMessageBodyClient().getJSON("http://127.0.0.1:1080/");
                         assertEquals(json.toString(), jsonObject.toString());
                     } catch (JSONException e) {
-                        throw new RuntimeException(e);
+                        fail(e.getMessage());
                     }
                 });
     }
 
-    @Test(expectedExceptions = HttpException.class, dependsOnMethods = "unchecked")
-    public void checked() {
-        String body = "Body Content";
-        test(getMockServer(),
-                interaction -> getMockServer().when(
-                        HttpRequest.request().withMethod("GET").withPath("/")
-                ).respond(
-                        HttpResponse.response().withBody(body).withStatusCode(400)
-                ),
-                t -> assertEquals(
-                        getSimpleHttpClient()
-                                .getResponse("http://127.0.0.1:1080/")
-                                .getStatusLine()
-                                .getStatusCode(),
-                        400
-                )
-        );
+    protected MessageBodyClient getMessageBodyClient() {
+        return messageBodyClient;
     }
-
-
-    @Test(dependsOnMethods = "getJson")
-    public void unchecked() {
-        SimpleHttpClient.unchecked(getSimpleHttpClient(), h -> {
-            String body = "Body Content";
-            test(getMockServer(),
-                    interaction -> getMockServer().when(
-                            HttpRequest.request().withMethod("GET").withPath("/")
-                    ).respond(
-                            HttpResponse.response().withBody(body).withStatusCode(400)
-                    ),
-                    t -> assertEquals(getSimpleHttpClient().getResponse("http://127.0.0.1:1080/").getStatusLine().getStatusCode(), 400));
-
-        });
-    }
-
-
 }

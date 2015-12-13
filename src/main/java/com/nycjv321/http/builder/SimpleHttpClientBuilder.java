@@ -1,5 +1,8 @@
-package com.nycjv321.http;
+package com.nycjv321.http.builder;
 
+import com.nycjv321.http.CredentialsProviderBuilder;
+import com.nycjv321.http.Requests;
+import com.nycjv321.http.client.Client;
 import com.nycjv321.utilities.Builder;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
@@ -18,17 +21,13 @@ import java.util.function.Supplier;
 /**
  * Created by fedora on 11/18/15.
  */
-public class SimpleHttpClientBuilder extends Builder<SimpleHttpClient, SimpleHttpClientBuilder> {
+public abstract class SimpleHttpClientBuilder extends Builder<Client, SimpleHttpClientBuilder> {
+    protected Supplier<CloseableHttpClient> httpClientSupplier;
+    protected Requests.Timeouts timeouts;
     private CredentialsProvider credentialsProvider;
-    private Supplier<CloseableHttpClient> httpClientSupplier;
-    private Requests.Timeouts timeouts;
 
-    private SimpleHttpClientBuilder() {
+    protected SimpleHttpClientBuilder() {
         httpClientSupplier = createHttpClient();
-    }
-
-    public static SimpleHttpClientBuilder create() {
-        return new SimpleHttpClientBuilder();
     }
 
     public SimpleHttpClientBuilder credentialProvider(CredentialsProvider credentialsProvider) {
@@ -45,20 +44,9 @@ public class SimpleHttpClientBuilder extends Builder<SimpleHttpClient, SimpleHtt
         return getThis();
     }
 
-
-    @Override
-    public SimpleHttpClient build() {
-        if (Objects.nonNull(timeouts)) {
-            return new SimpleHttpClient(httpClientSupplier, timeouts);
-        } else {
-            return new SimpleHttpClient(httpClientSupplier, Requests.Timeouts.getDefault());
-        }
-    }
-
     private boolean hasCredentialsProvider() {
         return Objects.nonNull(credentialsProvider);
     }
-
 
     private Supplier<CloseableHttpClient> createHttpClient() {
         return () -> {
