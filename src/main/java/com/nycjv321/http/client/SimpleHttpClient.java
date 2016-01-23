@@ -2,13 +2,12 @@ package com.nycjv321.http.client;
 
 import com.google.common.base.Strings;
 import com.nycjv321.http.Requests;
+import com.nycjv321.http.builder.ResponseClientBuilder;
+import com.nycjv321.http.exceptions.HttpException;
 import com.nycjv321.http.exceptions.UnAuthorizedException;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.jdom2.Document;
@@ -26,15 +25,15 @@ import java.util.function.Supplier;
 /**
  * Created by fedora on 12/13/15.
  */
-public class MessageBodyClient extends Client {
+public final class SimpleHttpClient extends Client {
 
-    public MessageBodyClient(Supplier<CloseableHttpClient> httpClientSupplier, Requests.Timeouts timeouts) {
+    private final ResponseClient responseClient;
+    public SimpleHttpClient(Supplier<CloseableHttpClient> httpClientSupplier, Requests.Timeouts timeouts) {
         super(httpClientSupplier, timeouts);
+        responseClient = (ResponseClient) ResponseClientBuilder.create().timeouts(timeouts).build();
     }
 
-    private static String consume(HttpResponse response) {
-        HttpEntity entity = response.getEntity();
-
+    private static String consume(HttpEntity entity) {
         // Attempt to create an input stream of the content and create its string representation as UTF8
         try (InputStream content = entity.getContent()) {
             return IOUtils.toString(content, "UTF-8").trim();
@@ -63,7 +62,7 @@ public class MessageBodyClient extends Client {
         try (StringReader characterStream = new StringReader(get(url))) {
             return jdomBuilder.build(characterStream);
         } catch (JDOMException | IOException e) {
-            throw new com.nycjv321.http.exceptions.HttpException(String.format("Error creating document of %s. See: %s", url, e));
+            throw new HttpException(String.format("Error creating document of %s. See: %s", url, e));
         }
     }
 
@@ -79,20 +78,7 @@ public class MessageBodyClient extends Client {
      * @return a string representation of the contents of the HTTP Response
      */
     public String get(String url, Header... headers) {
-        CloseableHttpClient httpClient = createHttpClient();
-        HttpRequestBase httpGet = create(METHOD.GET, url);
-
-        httpGet.setHeaders(headers);
-
-        // Perform a HTTP GET
-        try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
-            validateResponse(response, url);
-            logger.debug(String.format("GET %s: %s", url, response.getStatusLine()));
-            return consume(response);
-        } catch (IOException e) {
-            logger.error(e);
-        }
-        return "";
+        return consume(responseClient.get(url, headers).getEntity());
     }
 
     /**
@@ -106,7 +92,7 @@ public class MessageBodyClient extends Client {
     public JSONObject getJSON(String url) throws JSONException {
         final String responseBody = get(url);
         if (Strings.isNullOrEmpty(responseBody)) {
-            throw new com.nycjv321.http.exceptions.HttpException(String.format("%s returned an empty or null response", url));
+            throw new HttpException(String.format("%s returned an empty or null response", url));
         }
         return new JSONObject(responseBody);
     }

@@ -4,34 +4,36 @@ A simple wrapper of Apache's Http Client Library that tries to make interacting 
 
 ## Example Usage
 
-    // Create a message client
-    MessageBodyClient messageClient = MessageBodyClientBuilder.create().build();
-    // Or create a Response client
-    ResponsesClient responsesClient = ResponseClientBuilder.create().build();
+    // Create a client that only returns the response body
+    SimpleHttpClient simpleClient = SimpleClientBuilder.create().build();
+
+    // Or create a Response Client that returns a responses whichs includes
+    // both header and body information
+    ResponseClient responseClient = ResponseClientBuilder.create().build();
 
     // Download Google's homepage
-    messageClient.get("http://google.com") 
+    simpleClient.get("http://google.com") 
     
     // Resolve JSON Objects (provided via org.json)
-    messageClient.getJSON("http://localhost:3000/example.json")
+    simpleClient.getJSON("http://localhost:3000/example.json")
     
     // Resolve XML Document (provided via jdom)
-    messageClient.getDocument("http://localhost:3000/example.xml")
+    simpleClient.getDocument("http://localhost:3000/example.xml")
     
     // Returns a response object of the the requested url sans content
-    messageClient.head("http://localhost:3000/example.json") 
+    simpleClient.head("http://localhost:3000/example.json") 
     
     // Put a resource with custom headers
-    responsesClient.put("http://localhost:3000/resources", "/tmp/resource.json", new BasicHeader("key", "value")) 
+    responseClient.put("http://localhost:3000/resources", "/tmp/resource.json", new BasicHeader("key", "value"))
 	
     // Some as above with no headers
-    responsesClient.put("http://localhost:3000/resources", "/tmp/resource.json") 
+    responseClient.put("http://localhost:3000/resources", "/tmp/resource.json")
 
     // Post a resource with custom headers
-    responsesClient.post("http://localhost:3000/resource", "/tmp/resource.json", new BasicHeader("key", "value")) 
+    responseClient.post("http://localhost:3000/resource", "/tmp/resource.json", new BasicHeader("key", "value"))
 
 	// POST to a resource with no body and multiple headers
-    responsesClient.post(
+    responseClient.post(
         "http://localhost:3000/resource", 
         new BasicHeader("key", "value"),
         new BasicHeader("anotherHeader", "anotherValue")
@@ -40,7 +42,7 @@ A simple wrapper of Apache's Http Client Library that tries to make interacting 
 
 ### What about authentication?
 
-    MessageBodyClient client = MessageBodyClientBuilder.create().credentialProvider(
+    SimpleClientBuilder client = SimpleClientBuilder.create().credentialProvider(
         CredentialsProviderBuilder.BasicUserNamePasswordBuilder(
             "username", "password"
         )

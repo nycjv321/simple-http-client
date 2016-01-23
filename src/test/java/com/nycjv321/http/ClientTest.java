@@ -1,51 +1,64 @@
 package com.nycjv321.http;
 
-import org.mockserver.integration.ClientAndProxy;
-import org.mockserver.integration.ClientAndServer;
-import org.testng.annotations.AfterMethod;
+import com.nycjv321.http.builder.ResponseClientBuilder;
+import com.nycjv321.http.client.Client;
+import com.nycjv321.http.client.ResponseClient;
+import com.nycjv321.http.exceptions.HttpException;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
-import java.util.Objects;
-import java.util.function.Consumer;
+import static org.testng.Assert.assertEquals;
 
-/**
- * Created by fedora on 11/18/15.
- */
-public abstract class ClientTest {
+public class ClientTest extends AbstractClientTest {
 
-    private ClientAndProxy proxy;
-    private ClientAndServer mockServer;
+    private ResponseClient responseClient;
 
     @BeforeMethod(alwaysRun = true)
     public void beforeMethod() throws Exception {
-        mockServer = ClientAndServer.startClientAndServer(1080);
-        proxy = ClientAndProxy.startClientAndProxy(1090);
-
+        super.beforeMethod();
+        responseClient = ResponseClientBuilder.create().build();
     }
 
 
-    @AfterMethod(alwaysRun = true)
-    public void afterMethod() throws Exception {
-        if (Objects.nonNull(getProxy())) {
-            getProxy().stop();
-        }
-        if (Objects.nonNull(getMockServer())) {
-            getMockServer().stop();
-        }
+    @Test(expectedExceptions = HttpException.class, dependsOnMethods = "unchecked")
+    public void checked() {
+        String body = "Body Content";
+        test(getMockServer(),
+                interaction -> getMockServer().when(
+                        HttpRequest.request().withMethod("GET").withPath("/")
+                ).respond(
+                        HttpResponse.response().withBody(body).withStatusCode(400)
+                ),
+                t -> assertEquals(
+                        getResponseClient()
+                                .get("http://127.0.0.1:1080/")
+                                .getStatusLine()
+                                .getStatusCode(),
+                        400
+                )
+        );
     }
 
 
-    public <T extends ClientTest> void test(ClientAndServer mockServer, Consumer<T> mockedInteraction, Consumer<T> test) {
-        mockedInteraction.accept((T) this);
-        test.accept((T) this);
-        mockServer.reset();
+    @Test
+    public void unchecked() {
+        Client.unchecked(getResponseClient(), h -> {
+            String body = "Body Content";
+            test(getMockServer(),
+                    interaction -> getMockServer().when(
+                            HttpRequest.request().withMethod("GET").withPath("/")
+                    ).respond(
+                            HttpResponse.response().withBody(body).withStatusCode(400)
+                    ),
+                    t -> assertEquals(getResponseClient().get("http://127.0.0.1:1080/").getStatusLine().getStatusCode(), 400));
+
+        });
     }
 
-    protected ClientAndServer getMockServer() {
-        return mockServer;
-    }
 
-    public ClientAndProxy getProxy() {
-        return proxy;
+    private ResponseClient getResponseClient() {
+        return responseClient;
     }
 }

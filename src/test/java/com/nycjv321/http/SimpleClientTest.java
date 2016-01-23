@@ -1,12 +1,14 @@
 package com.nycjv321.http;
 
 import com.google.common.collect.ImmutableMap;
-import com.nycjv321.http.builder.MessageBodyClientBuilder;
-import com.nycjv321.http.client.MessageBodyClient;
+import com.nycjv321.http.builder.SimpleClientBuilder;
+import com.nycjv321.http.client.SimpleHttpClient;
 import com.nycjv321.utilities.XMLUtilities;
+import org.apache.http.message.BasicHeader;
 import org.jdom2.Document;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.testng.annotations.BeforeMethod;
@@ -15,14 +17,14 @@ import org.testng.annotations.Test;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
-public class MessageClientTest extends ClientTest {
+public class SimpleClientTest extends AbstractClientTest {
 
-    private MessageBodyClient messageBodyClient;
+    private SimpleHttpClient simpleHttpClient;
 
     @BeforeMethod(alwaysRun = true)
     public void beforeMethod() throws Exception {
         super.beforeMethod();
-        messageBodyClient = MessageBodyClientBuilder.create().build();
+        simpleHttpClient = SimpleClientBuilder.create().build();
     }
 
     @Test
@@ -34,7 +36,21 @@ public class MessageClientTest extends ClientTest {
                 ).respond(
                         HttpResponse.response().withBody(body).withStatusCode(200)
                 ),
-                t -> assertEquals(getMessageBodyClient().get("http://127.0.0.1:1080/"), body));
+                t -> assertEquals(getSimpleHttpClient().get("http://127.0.0.1:1080/"), body));
+    }
+
+    @Test
+    public void getHeaders() throws Exception {
+        String body = "Body Content";
+        test(getMockServer(),
+                interaction -> {
+                    getMockServer().when(
+                            HttpRequest.request().withMethod("GET").withPath("/").withHeader(new Header("test", "value"))
+                    ).respond(
+                            HttpResponse.response().withBody(body).withStatusCode(200)
+                    );
+                },
+                t -> assertEquals(getSimpleHttpClient().get("http://127.0.0.1:1080/", new BasicHeader("test", "value")), body));
     }
 
 
@@ -47,7 +63,7 @@ public class MessageClientTest extends ClientTest {
                 ).respond(
                         HttpResponse.response().withBody(XMLUtilities.toString(body)).withStatusCode(200)
                 ),
-                t -> assertEquals(XMLUtilities.toString(getMessageBodyClient().getDocument("http://127.0.0.1:1080/")), XMLUtilities.toString(body)));
+                t -> assertEquals(XMLUtilities.toString(getSimpleHttpClient().getDocument("http://127.0.0.1:1080/")), XMLUtilities.toString(body)));
     }
 
     @Test(dependsOnMethods = "getDocument")
@@ -62,7 +78,7 @@ public class MessageClientTest extends ClientTest {
                 t -> {
                     JSONObject json = null;
                     try {
-                        json = getMessageBodyClient().getJSON("http://127.0.0.1:1080/");
+                        json = getSimpleHttpClient().getJSON("http://127.0.0.1:1080/");
                         assertEquals(json.toString(), jsonObject.toString());
                     } catch (JSONException e) {
                         fail(e.getMessage());
@@ -70,7 +86,7 @@ public class MessageClientTest extends ClientTest {
                 });
     }
 
-    protected MessageBodyClient getMessageBodyClient() {
-        return messageBodyClient;
+    protected SimpleHttpClient getSimpleHttpClient() {
+        return simpleHttpClient;
     }
 }

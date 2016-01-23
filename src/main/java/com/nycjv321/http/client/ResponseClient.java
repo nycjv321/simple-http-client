@@ -24,9 +24,9 @@ import java.util.function.Supplier;
 /**
  * Created by fedora on 12/13/15.
  */
-public class ResponsesClient extends Client {
+public final class ResponseClient extends Client {
 
-    public ResponsesClient(Supplier<CloseableHttpClient> httpClientSupplier, Requests.Timeouts timeouts) {
+    public ResponseClient(Supplier<CloseableHttpClient> httpClientSupplier, Requests.Timeouts timeouts) {
         super(httpClientSupplier, timeouts);
     }
 
@@ -112,9 +112,10 @@ public class ResponsesClient extends Client {
         return EmptyStatusLine.get();
     }
 
-    public HttpResponse get(String url) {
+    public HttpResponse get(String url, Header... headers) {
         CloseableHttpClient httpClient = createHttpClient();
         HttpRequestBase httpGet = create(METHOD.GET, url);
+        httpGet.setHeaders(headers);
         // Perform a HTTP GET
         try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
             validateResponse(response, url);

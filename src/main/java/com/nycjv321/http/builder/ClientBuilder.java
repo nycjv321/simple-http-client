@@ -21,25 +21,25 @@ import java.util.function.Supplier;
 /**
  * Created by fedora on 11/18/15.
  */
-public abstract class SimpleHttpClientBuilder extends Builder<Client, SimpleHttpClientBuilder> {
+public abstract class ClientBuilder extends Builder<Client, ClientBuilder> {
     protected Supplier<CloseableHttpClient> httpClientSupplier;
     protected Requests.Timeouts timeouts;
     private CredentialsProvider credentialsProvider;
 
-    protected SimpleHttpClientBuilder() {
+    protected ClientBuilder() {
         httpClientSupplier = createHttpClient();
     }
 
-    public SimpleHttpClientBuilder credentialProvider(CredentialsProvider credentialsProvider) {
+    public ClientBuilder credentialProvider(CredentialsProvider credentialsProvider) {
         this.credentialsProvider = credentialsProvider;
         return getThis();
     }
 
-    public SimpleHttpClientBuilder credentialProvider(CredentialsProviderBuilder credentialsProvider) {
+    public ClientBuilder credentialProvider(CredentialsProviderBuilder credentialsProvider) {
         return credentialProvider(credentialsProvider.build());
     }
 
-    public SimpleHttpClientBuilder timeouts(Requests.Timeouts timeouts) {
+    public ClientBuilder timeouts(Requests.Timeouts timeouts) {
         this.timeouts = timeouts;
         return getThis();
     }
@@ -78,7 +78,7 @@ public abstract class SimpleHttpClientBuilder extends Builder<Client, SimpleHttp
     }
 
     @Override
-    protected SimpleHttpClientBuilder getThis() {
+    protected ClientBuilder getThis() {
         return this;
     }
 }
